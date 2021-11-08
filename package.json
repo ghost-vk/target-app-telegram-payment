@@ -1,0 +1,26 @@
+{
+  "name": "target-app-telegram-payment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development node app.js"
+  },
+  "author": "Vlad Kuznetsov",
+  "license": "ISC",
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "i18n": "^0.13.3",
+    "node-telegram-bot-api": "^0.54.0",
+    "node-telegram-keyboard-wrapper": "^3.0.0",
+    "pg": "^8.7.1"
+  },
+  "devDependencies": {
+    "prettier": "^2.4.1"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.2"
+  }
+}
