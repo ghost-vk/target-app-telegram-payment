@@ -29,11 +29,12 @@ class User {
   }
 
   /**
-   * Can be 0, 1, 2, 3
+   * Can be 0, 1, 2, 3, null
    * 0 - waiting receipt
    * 1 - waiting confirm
    * 2 - rejected by admin
    * 3 - payment confirmed by admin
+   * null - payment cycle completed or not started
    * @param chatId
    * @param paymentStatus
    */
@@ -49,6 +50,19 @@ class User {
         result.rows.length !== 0 ? result.rows[0].payment_status : {}
       return status
     } catch (e) {
+      throw new Error(e)
+    }
+  }
+
+  static async getPaymentStatus(chatId) {
+    try {
+      const result = await db.query(`SELECT payment_status
+        FROM tg_payment_users
+        WHERE chat_id = $1`,
+        [chatId]
+      )
+      return result.rows[0].payment_status
+    } catch(e) {
       throw new Error(e)
     }
   }

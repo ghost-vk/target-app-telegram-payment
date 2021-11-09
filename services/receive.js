@@ -1,17 +1,125 @@
 const Response = require('./response')
 const Cart = require('./cart')
 const User = require('./user')
+const { ghostId } = require('./config')
 
 class Receive {
   static async handleMessage(msg) {
-    const response = [msg.chat.id]
-    const { text, form } = Response.genProducts()
-    response.push(text, form)
-    return response
+    try {
+      const paymentStatus = await User.getPaymentStatus(msg.chat.id)
+      let responses = []
+
+      if (paymentStatus === 0) {
+        if (msg?.photo) {
+          console.log('🔵 try handling photo ...')
+          responses = await this.handlePhotoReceipt(msg)
+          return responses
+        } else if (msg?.document) {
+          responses = await this.handleFileReceipt(msg)
+          return responses
+        } else {
+          // waiting for photo of receipt but get something else
+          const { text, form } = Response.genWrongReceiptType()
+          responses.push({
+            type: 'message',
+            chatId: msg.chat.id,
+            text,
+            form
+          })
+          return responses
+        }
+      }
+
+      return []
+    } catch(e) {
+      throw new Error(e)
+    }
   }
   static handleBotCommand() {}
-  static handlePhoto() {}
-  static handleFile() {}
+  static async handlePhotoReceipt(msg) {
+    try {
+      let responses = []
+      const photoId = msg.photo[msg.photo.length - 1].file_id
+
+      if (photoId) {
+        const currentProductId = await Cart.getProductFromUserCart(msg.chat.id)
+        const toOperator = await Response.genReceiptToOperator(msg.chat.id, currentProductId)
+        const toClient = Response.genSuccessReceiptSending()
+        responses.push({
+          type: 'photo',
+          chatId: ghostId,
+          photo: photoId
+        })
+        responses.push({
+          type: 'message',
+          chatId: ghostId,
+          text: toOperator.text,
+          form: toOperator.form
+        })
+        responses.push({
+          type: 'message',
+          chatId: msg.chat.id,
+          text: toClient.text,
+          form: toClient.form
+        })
+      }
+
+      await User.setPaymentStatus(msg.chat.id, 1)
+
+      return responses
+    } catch(e) {
+      throw new Error(e)
+    }
+  }
+  static async handleFileReceipt(msg) {
+    let responses = []
+    try {
+      const fileName = msg.document.file_name.toLowerCase()
+      const splitFileName = fileName.split('.')
+      const ext = splitFileName[splitFileName.length - 1]
+      if (!['jpg', 'jpeg', 'pdf', 'png'].includes(ext)) {
+        const { text, form } = Response.genWrongReceiptType()
+        responses.push({
+          type: 'message',
+          chatId: msg.chat.id,
+          text,
+          form
+        })
+        return responses
+      }
+
+      const fileId = msg.document.file_id
+
+      if (fileId) {
+        const currentProductId = await Cart.getProductFromUserCart(msg.chat.id)
+        const toOperator = await Response.genReceiptToOperator(msg.chat.id, currentProductId)
+        const toClient = Response.genSuccessReceiptSending()
+        responses.push({
+          type: 'photo',
+          chatId: ghostId,
+          photo: photoId
+        })
+        responses.push({
+          type: 'message',
+          chatId: ghostId,
+          text: toOperator.text,
+          form: toOperator.form
+        })
+        responses.push({
+          type: 'message',
+          chatId: msg.chat.id,
+          text: toClient.text,
+          form: toClient.form
+        })
+      }
+
+      await User.setPaymentStatus(msg.chat.id, 1)
+
+      return responses
+    } catch (e) {
+      throw new Error(e)
+    }
+  }
   static async handlePayload(payload, chatId) {
     try {
       let paymentMethod

@@ -3,7 +3,7 @@ const express = require('express')
 const app = express()
 const { bot, listen } = require('./services/bot')
 
-config.setUrl('https://6c23-185-15-62-94.ngrok.io')
+config.setUrl('https://23bf-176-59-71-35.ngrok.io')
 
 app.use(express.json())
 

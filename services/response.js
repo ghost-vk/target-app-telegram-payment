@@ -191,6 +191,24 @@ class Response {
       }
     }
   }
+
+  static async genReceiptToOperator(chatId, productId) {
+    try {
+      const { title, price } = await Product.getInfo(productId)
+      return {
+        text: i18n.__('payment.receipt_to_operator', {
+          userId: chatId,
+          productTitle: title,
+          price: price
+        }),
+        form: {
+          parse_mode: 'markdown'
+        }
+      }
+    } catch (e) {
+      throw new Error(e)
+    }
+  }
 }
 
 module.exports = Response
