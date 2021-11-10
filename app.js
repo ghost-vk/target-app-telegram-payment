@@ -21,13 +21,13 @@ const start = async () => {
       const httpsServer = https.createServer(
         {
           key: fs.readFileSync(
-            '/home/ghost/secret/privkey.pem'
+            '/etc/letsencrypt/live/anastasi-target.ru/privkey.pem'
           ),
           cert: fs.readFileSync(
-            '/home/ghost/secret/cert.pem'
+            '/etc/letsencrypt/live/anastasi-target.ru/cert.pem'
           ),
           ca: fs.readFileSync(
-            '/home/ghost/secret/chain.pem'
+            '/etc/letsencrypt/live/anastasi-target.ru/chain.pem'
           ),
         },
         app
