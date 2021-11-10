@@ -1,17 +1,8 @@
 const db = require('./../db')
-const User = require('./user')
 
 class Cart {
   static async addToCart(chatId, itemId) {
     try {
-      const existUser = await User.getUserByChatId(chatId)
-      console.log('🔵 existUser:', existUser)
-      const isUserExist = !!existUser?.chat_id
-
-      if (!isUserExist) {
-        await User.addNew(chatId)
-      }
-
       const result = await db.query(
         `UPDATE tg_payment_users
         SET item_in_cart = $1

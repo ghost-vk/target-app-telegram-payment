@@ -1,12 +1,15 @@
 const {
   InlineKeyboard,
   ReplyKeyboard,
+  KeyboardButton,
   Row,
   InlineKeyboardButton,
 } = require('node-telegram-keyboard-wrapper')
 const i18n = require('./../i18n.config')
 const Product = require('./product')
+const Cart = require('./cart')
 const config = require('./config')
+const User = require('./user')
 
 const paymentStartKb = new InlineKeyboard()
 paymentStartKb.push(
@@ -39,6 +42,14 @@ paymentMethodsKb.push(
       'START_CHAT'
     )
   )
+)
+
+const adminReplyKb = new ReplyKeyboard(
+  new Row(
+    new KeyboardButton(i18n.__('admin.confirm_payment')),
+    new KeyboardButton(i18n.__('admin.reject_payment'))
+  ),
+  new Row(new KeyboardButton(i18n.__('admin.unhandled_payment_list')))
 )
 
 const availableMaterialsKb = new InlineKeyboard()
@@ -77,6 +88,12 @@ confirmKb.push(
       'callback_data',
       'EXIST_PRODUCT'
     )
+  )
+)
+
+const supportKb = new InlineKeyboard(
+  new Row(
+    new InlineKeyboardButton('👨‍💻 Поддержка', 'url', 'https://t.me/ghost_vkv')
   )
 )
 
@@ -168,9 +185,6 @@ class Response {
   static genReceiptRequest() {
     return {
       text: i18n.__('payment.receipt_request'),
-      form: {
-        parse_mode: 'markdown'
-      }
     }
   }
 
@@ -178,8 +192,8 @@ class Response {
     return {
       text: i18n.__('payment.wrong_receipt_type'),
       form: {
-        parse_mode: 'markdown'
-      }
+        parse_mode: 'markdown',
+      },
     }
   }
 
@@ -187,26 +201,89 @@ class Response {
     return {
       text: i18n.__('payment.success_receipt_sending'),
       form: {
-        parse_mode: 'markdown'
-      }
+        reply_markup: supportKb.getMarkup(),
+      },
     }
   }
 
   static async genReceiptToOperator(chatId, productId) {
     try {
       const { title, price } = await Product.getInfo(productId)
+      const { username } = await User.getUserByChatId(chatId)
       return {
         text: i18n.__('payment.receipt_to_operator', {
           userId: chatId,
           productTitle: title,
-          price: price
+          price,
+          username,
         }),
         form: {
-          parse_mode: 'markdown'
-        }
+          parse_mode: 'markdown',
+        },
       }
     } catch (e) {
       throw new Error(e)
+    }
+  }
+
+  static genSuccessAdminAuth() {
+    return {
+      text: 'Успешная авторизация ✅\nМожно выбирать действия на клавиатуре 👇',
+      form: {
+        reply_markup: adminReplyKb.getMarkup(),
+      },
+    }
+  }
+
+  static async genPaymentConfirmed(chatId) {
+    try {
+      const productId = await Cart.getProductFromUserCart(chatId)
+      const { category } = await Product.getInfo(productId)
+      let text = ''
+      switch (category) {
+        case 'target': {
+          text = 'Ожидайте, скоро Вам отправят два брифа для заполнения'
+          break
+        }
+        case 'consultation': {
+          text = 'Ожидайте, скоро с Вами свяжутся'
+          break
+        }
+        case 'materials': {
+          text = 'Ожидайте, скоро Вам отправят материалы'
+          break
+        }
+        case 'telegram': {
+          text = 'Ожидайте, скоро Ваc добавят в закрытый чат'
+          break
+        }
+      }
+      return {
+        text: i18n.__('payment.payment_confirmed', { text }),
+      }
+    } catch (e) {
+      throw new Error(e)
+    }
+  }
+
+  static genPaymentRejected() {
+    return {
+      text: i18n.__('payment.payment_rejected'),
+    }
+  }
+
+  static genPaymentAlreadyProcessing() {
+    return {
+      text: i18n.__('payment.payment_already_processing'),
+    }
+  }
+
+  static genDefaultResponse() {
+    return {
+      text: i18n.__('payment.default_response'),
+      form: {
+        reply_markup: supportKb.getMarkup()
+      }
     }
   }
 }

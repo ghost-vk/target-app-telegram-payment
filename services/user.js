@@ -1,12 +1,12 @@
 const db = require('./../db')
 
 class User {
-  static async addNew(chatId) {
+  static async addNew(chatId, username = null) {
     try {
       const result = await db.query(
-        `INSERT INTO tg_payment_users (id, chat_id, item_in_cart)
-       VALUES (DEFAULT, $1, DEFAULT) RETURNING *`,
-        [chatId]
+        `INSERT INTO tg_payment_users (id, chat_id, item_in_cart, username)
+       VALUES (DEFAULT, $1, DEFAULT, $2) RETURNING *`,
+        [chatId, username]
       )
       const user = result.rows.length !== 0 ? result.rows[0] : {}
       return user

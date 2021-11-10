@@ -31,7 +31,8 @@ const send = async (responses) => {
         sentMessage = await bot.sendPhoto(r.chatId, r.photo)
         console.log('🔵 sent photo: ', sentMessage)
       } else if (r.type === 'document') {
-        console.log('document')
+        sentMessage = await bot.sendDocument(r.chatId, r.doc)
+        console.log('🔵 sent document: ', sentMessage)
         return
       } else {
         console.warn('🔴 response type is not passed')

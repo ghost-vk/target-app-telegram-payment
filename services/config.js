@@ -14,7 +14,20 @@ module.exports = {
   paypalLink: process.env.PAYPAL_LINK,
   ghostId: process.env.GHOST_ID,
 
+  paymentStatus: {
+    waitingReceipt: 0,
+    waitingConfirm: 1,
+    rejected: 2,
+    confirmed: 3
+  },
+
+  isAdmin(id) {
+    const userId = Number(id)
+    const adminId = Number(process.env.GHOST_ID)
+    return !!(userId && adminId && userId === adminId)
+  },
+
   setUrl(url) {
     this.URL = url
-  }
+  },
 }
