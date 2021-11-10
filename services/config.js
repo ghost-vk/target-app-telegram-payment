@@ -13,6 +13,7 @@ module.exports = {
   qiwiLink: process.env.QIWI_LINK,
   paypalLink: process.env.PAYPAL_LINK,
   ghostId: process.env.GHOST_ID,
+  isProduction: process.env.NODE_ENV === 'production',
 
   paymentStatus: {
     waitingReceipt: 0,
