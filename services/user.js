@@ -56,7 +56,7 @@ class User {
 
   static async getPaymentStatus(chatId) {
     try {
-      const resut = await db.query(
+      const result = await db.query(
         `SELECT payment_status
         FROM tg_payment_users
         WHERE chat_id = $1`,

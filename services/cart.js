@@ -12,6 +12,7 @@ class Cart {
 
       return result.rows[0]
     } catch (e) {
+      console.error('Error when add to cart')
       throw new Error(e)
     }
   }
@@ -25,6 +26,7 @@ class Cart {
 
       return result.rows[0].item_in_cart
     } catch (e) {
+      console.error('Error when get user product from cart')
       throw new Error(e)
     }
   }
