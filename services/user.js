@@ -56,13 +56,29 @@ class User {
 
   static async getPaymentStatus(chatId) {
     try {
-      const result = await db.query(`SELECT payment_status
+      const resut = await db.query(
+        `SELECT payment_status
         FROM tg_payment_users
         WHERE chat_id = $1`,
         [chatId]
       )
       return result.rows[0].payment_status
-    } catch(e) {
+    } catch (e) {
+      throw new Error(e)
+    }
+  }
+
+  static async setUsername(chatId, username) {
+    try {
+      // username.replace('@', '').replace('https://t.me/', '')
+      const result = await db.query(
+        `UPDATE tg_payment_users
+        SET username = $1
+        WHERE chat_id = $2`,
+        [username, chatId]
+      )
+      return result.rows[0]
+    } catch (e) {
       throw new Error(e)
     }
   }

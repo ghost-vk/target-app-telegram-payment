@@ -1,6 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api')
 const config = require('./config')
 const Receive = require('./receive')
+const User = require('./user')
 
 const bot = new TelegramBot(config.TOKEN)
 
@@ -42,12 +43,26 @@ const send = async (responses) => {
     throw new Error(e)
   }
 }
-
 module.exports = {
   bot,
   listen() {
     bot.on('message', async (msg) => {
       try {
+        let user
+        user = await User.getUserByChatId(msg.chat.id)
+        const isUserExist = !!user?.chat_id
+
+        if (!isUserExist) {
+          user = await User.addNew(msg.chat.id, msg.chat.username)
+        }
+
+        if (!user.username) {
+          const chat = await bot.getChat(user.id)
+          if (chat.username) {
+            await User.setUsername(user.id, chat.username)
+          }
+        }
+
         console.log('🔵 got message: ', msg)
         const responses = await Receive.handleMessage(msg)
         console.log('🔵 Message is handled, got responses: ', responses)
@@ -61,6 +76,20 @@ module.exports = {
     // Action from inline keyboard
     bot.on('callback_query', async (msg) => {
       try {
+        let user = await User.getUserByChatId(msg.from.id)
+        const isUserExist = !!user?.chat_id
+
+        if (!isUserExist) {
+          await User.addNew(msg.from.id, msg.from.username)
+        }
+
+        if (!user.username) {
+          const chat = await bot.getChat(user.chat_id)
+          if (chat.username) {
+            await User.setUsername(user.chat_id, chat.username)
+          }
+        }
+
         console.log('🔵 get callback_query: ', msg)
         const response = await Receive.handleCallbackQuery(msg)
         if (!response) {

@@ -29,9 +29,7 @@ class Receive {
 
       const userPaymentStatus = await User.getPaymentStatus(msg.chat.id)
       if (userPaymentStatus === paymentStatus.waitingReceipt) {
-        console.log('🔵 waiting for receipt ...')
         if (msg?.photo) {
-          console.log('🔵 try handling photo ...')
           responses = await this.handlePhotoReceipt(msg)
         } else if (msg?.document) {
           responses = await this.handleFileReceipt(msg)
@@ -73,7 +71,6 @@ class Receive {
     try {
       let userPaymentStatus = await User.getPaymentStatus(msg.chat.id)
       if (msg?.photo && userPaymentStatus === paymentStatus.waitingReceipt) {
-        console.log('🔵 try handling photo ...')
         responses = await this.handlePhotoReceipt(msg)
         return responses
       } else if (
@@ -152,13 +149,13 @@ class Receive {
       throw new Error(e)
     }
   }
+
   static async handleBotCommand(msg) {
     try {
       switch (msg.text.toLowerCase()) {
         case '/admin': {
           let responses = []
           if (!isAdmin(msg.chat.id)) {
-            console.log('no admin')
             return responses
           }
           const { text, form } = Response.genSuccessAdminAuth()
@@ -194,8 +191,9 @@ class Receive {
       throw new Error(e)
     }
   }
+
   static async handlePhotoReceipt(msg) {
-    console.log('🔵 try handlePhotoReceipt')
+
     let responses = []
     try {
       const photoId = msg.photo[msg.photo.length - 1].file_id
@@ -235,6 +233,7 @@ class Receive {
       throw new Error(e)
     }
   }
+
   static async handleFileReceipt(msg) {
     let responses = []
     try {
@@ -287,6 +286,7 @@ class Receive {
       throw new Error(e)
     }
   }
+
   static async handlePayload(payload, chatId) {
     try {
       let paymentMethod
@@ -390,6 +390,11 @@ class Receive {
           return { text, form }
         }
         case 'CONFIRM_PAYMENT_REQUEST': {
+          const user = await User.getUserByChatId(chatId)
+          if (!user.username) {
+            const { text } = Response.genRequestUsername()
+            return { text }
+          }
           await User.setPaymentStatus(chatId, paymentStatus.waitingReceipt)
           const { text, form } = Response.genReceiptRequest()
           return { text, form }
@@ -402,6 +407,7 @@ class Receive {
       throw new Error(e)
     }
   }
+
   static async handleCallbackQuery(query) {
     try {
       if (query.from.is_bot) {
@@ -411,8 +417,7 @@ class Receive {
       const response = [query.from.id]
 
       const { text, form } = await this.handlePayload(query.data, response[0])
-      console.log(`🔵 text from handlePayload:`, text)
-      console.log(`🔵 form from handlePayload:`, form)
+
       if (text) {
         response.push(text)
       }
@@ -440,11 +445,9 @@ class Receive {
           return responses
         }
 
-        console.log('✅ test')
-
         if (store.adminAction === 'confirm') {
           await User.setPaymentStatus(clientId, paymentStatus.confirmed)
-          const { text } = await Response.genPaymentConfirmed(clientId)
+          const { text, form } = await Response.genPaymentConfirmed(clientId)
           const { username } = await User.getUserByChatId(clientId)
           await Cart.addToCart(clientId, null)
           responses.push(
@@ -457,6 +460,7 @@ class Receive {
               type: 'message',
               chatId: clientId,
               text,
+              form
             }
           )
           return responses

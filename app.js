@@ -14,6 +14,7 @@ app.post(`/bot${config.TOKEN}`, (req, res) => {
 
 listen()
 
+config.setUrl('https://068d-91-215-88-121.ngrok.io')
 const start = async () => {
   try {
     await bot.setWebHook(`${config.URL}/bot${config.TOKEN}`)

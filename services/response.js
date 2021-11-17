@@ -188,6 +188,12 @@ class Response {
     }
   }
 
+  static genRequestUsername() {
+    return {
+      text: i18n.__('payment.no_username'),
+    }
+  }
+
   static genWrongReceiptType() {
     return {
       text: i18n.__('payment.wrong_receipt_type'),
@@ -238,8 +244,9 @@ class Response {
   static async genPaymentConfirmed(chatId) {
     try {
       const productId = await Cart.getProductFromUserCart(chatId)
-      const { category } = await Product.getInfo(productId)
+      const { category, secret_link, title } = await Product.getInfo(productId)
       let text = ''
+      let form = {}
       switch (category) {
         case 'target': {
           text = 'Ожидайте, скоро Вам отправят два брифа для заполнения'
@@ -250,7 +257,17 @@ class Response {
           break
         }
         case 'materials': {
-          text = 'Ожидайте, скоро Вам отправят материалы'
+          if (secret_link) {
+            text = 'Чтобы получить материал нажмите на кнопку 👇'
+            const kb = new InlineKeyboard(
+              new Row(new InlineKeyboardButton(title, 'url', secret_link))
+            )
+            form = { reply_markup: kb.getMarkup() }
+          } else {
+            text =
+              'Что-то пошло не так, отравьте нам пожалуйста переписку с ботом 👇'
+            form = { reply_markup: supportKb.getMarkup() }
+          }
           break
         }
         case 'telegram': {
@@ -260,6 +277,7 @@ class Response {
       }
       return {
         text: i18n.__('payment.payment_confirmed', { text }),
+        form,
       }
     } catch (e) {
       throw new Error(e)
@@ -282,8 +300,8 @@ class Response {
     return {
       text: i18n.__('payment.default_response'),
       form: {
-        reply_markup: supportKb.getMarkup()
-      }
+        reply_markup: supportKb.getMarkup(),
+      },
     }
   }
 }
